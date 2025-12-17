@@ -104,21 +104,25 @@ class PrivilegeEscalationDetector:
         return permissions
     
     def _build_trust_graph(self, roles: List[Dict]):
-        """Build directed graph of trust relationships."""
-        for role in roles:
-            role_name = role['name']
-            trust_policy = role.get('trust_policy', {})
+    """Build directed graph of trust relationships."""
+    # First, create a set of all role names for O(1) lookup
+    role_names = {r['name'] for r in roles}  # ← ADD THIS LINE
+    
+    for role in roles:
+        role_name = role['name']
+        trust_policy = role.get('trust_policy', {})
+        
+        # Extract principals that can assume this role
+        for statement in trust_policy.get('Statement', []):
+            if statement.get('Effect') != 'Allow':
+                continue
             
-            # Extract principals that can assume this role
-            for statement in trust_policy.get('Statement', []):
-                if statement.get('Effect') != 'Allow':
-                    continue
-                
-                principals = self._extract_principals(statement.get('Principal', {}))
-                
-                for principal in principals:
-                    # If principal is another role in this account, add edge
-                    if principal in [r['name'] for r in roles]:
+            principals = self._extract_principals(statement.get('Principal', {}))
+            
+            for principal in principals:
+                # If principal is another role in this account, add edge
+                if principal in role_names:  # ← USE THE SET (much faster)
+                    if role_name not in self.graph[principal]:  # ← AVOID DUPLICATES
                         self.graph[principal].append(role_name)
     
     def _extract_principals(self, principal_field) -> Set[str]:
