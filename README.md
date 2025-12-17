@@ -1,16 +1,16 @@
 # Sage
-# IAM Validator
+
+**Enterprise AWS IAM Security Scanner**
 
 Production-grade AWS IAM security scanning tool that detects misconfigurations, privilege escalation paths, and security violations.
 
 ## Features
 
-- ✅ Scans all IAM roles and users
-- ✅ Detects privilege escalation chains
-- ✅ Risk scoring for each finding
-- ✅ Actionable remediation recommendations
-- ✅ JSON report export
-- ✅ Multi-account support
+- ✅ **Comprehensive Scanning** - All IAM roles, users, and policies
+- ✅ **Risk Intelligence** - Priority scoring for each finding
+- ✅ **Actionable Insights** - Clear remediation steps
+- ✅ **Multiple Formats** - JSON, console, and HTML reports
+- ✅ **Enterprise Ready** - Multi-account, multi-region support
 
 ## Quick Start
 
@@ -27,36 +27,80 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+
+### AWS Setup
+Option 1: Environment Variables
+```bash
+export AWS_ACCESS_KEY_ID="your_access_key"
+export AWS_SECRET_ACCESS_KEY="your_secret_key"
+export AWS_DEFAULT_REGION="us-east-1"
+```
+Option 2: AWS Credentials File
+```bash
+mkdir -p ~/.aws
+nano ~/.aws/credentials
+[default]
+aws_access_key_id = your_access_key
+aws_secret_access_key = your_secret_key
+
+nano ~/.aws/config 
+[default]
+region = us-east-1
+```
+
 ### Usage
 ```bash
-# Scan with default AWS profile
+# Basic scan with default AWS profile
 python iam_validator.py
 
-# Scan with specific profile
+# Scan with specific AWS profile
 python iam_validator.py --profile production
 
 # Custom output file
-python iam_validator.py --output report.json
+python iam_validator.py --output security_report.json
+
+# Generate credential report first (for root account checks)
+aws iam generate-credential-report
 ```
 
-## Output
+ Output
+======================================================================
+                   SAGE - SECURITY REPORT                    
+======================================================================
+📊 SUMMARY
+   Total Findings: 2
+   🔴 CRITICAL: 1
+   🟠 HIGH: 1
+   🟡 MEDIUM: 0
+   🟢 LOW: 0
 
-Results are saved as JSON with findings and risk scores:
-```json
+## JSON Report (iam_findings.json):
+```bash
 {
   "summary": {
-    "total_findings": 5,
+    "timestamp": "2024-01-15T10:30:00",
+    "total_findings": 2,
     "by_severity": {
       "CRITICAL": 1,
-      "HIGH": 2,
-      "MEDIUM": 2
+      "HIGH": 1,
+      "MEDIUM": 0,
+      "LOW": 0
     }
   },
-  "findings": [...]
+  "findings": [
+    {
+      "type": "ROOT_MFA_DISABLED",
+      "severity": "CRITICAL",
+      "risk_score": 90,
+      "resource": "<root>",
+      "message": "MFA not enabled on root account",
+      "fix": "Enable MFA on root account via AWS Console"
+    }
+  ]
 }
 ```
 
-## Rules
+### Security Rules
 
 Current rules implemented:
 - Wildcard actions (*)
