@@ -21,7 +21,7 @@ Production-grade AWS IAM security scanning tool that detects misconfigurations, 
 ### Installation
 ```bash
 git clone https://github.com/SarahModi/Sage.git
-cd iam-validator
+cd Sage
 python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
