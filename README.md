@@ -20,7 +20,7 @@ Production-grade AWS IAM security scanning tool that detects misconfigurations, 
 
 ### Installation
 ```bash
-git clone https://github.com/SarahModi/iam-validator.git
+git clone https://github.com/SarahModi/Sage.git
 cd iam-validator
 python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
