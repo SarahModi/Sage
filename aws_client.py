@@ -188,3 +188,63 @@ class AWSClient:
         except Exception:
             pass
         return devices
+
+# Add after _get_mfa_devices() method:
+
+def get_permission_boundary(self, name: str, is_user: bool = False) -> Dict:
+    """
+    Get permission boundary for a user or role.
+    Permission boundaries limit the maximum permissions.
+    """
+    try:
+        if is_user:
+            response = self.iam_client.get_user(UserName=name)
+        else:
+            response = self.iam_client.get_role(RoleName=name)
+        
+        # Permission boundary is stored as ARN
+        boundary_arn = response.get('User', {}).get('PermissionsBoundary', {}).get('PermissionsBoundaryArn') if is_user else response.get('Role', {}).get('PermissionsBoundary', {}).get('PermissionsBoundaryArn')
+        
+        if not boundary_arn:
+            return None
+        
+        # Fetch the actual policy document
+        return self.get_policy_version(boundary_arn)
+    except Exception:
+        return None
+
+def get_policy_version(self, policy_arn: str, version_id: str = None) -> Dict:
+    """
+    Get specific version of a managed policy.
+    If no version_id provided, gets the default version.
+    """
+    try:
+        if not version_id:
+            # Get default version
+            policy = self.iam_client.get_policy(PolicyArn=policy_arn)
+            version_id = policy['Policy']['DefaultVersionId']
+        
+        response = self.iam_client.get_policy_version(
+            PolicyArn=policy_arn,
+            VersionId=version_id
+        )
+        return response['PolicyVersion']['Document']
+    except Exception as e:
+        print(f"⚠️  Could not fetch policy {policy_arn}: {e}")
+        return None
+
+def get_all_policy_versions(self, policy_arn: str) -> List[Dict]:
+    """Get all versions of a managed policy"""
+    try:
+        versions = []
+        paginator = self.iam_client.get_paginator('list_policy_versions')
+        for page in paginator.paginate(PolicyArn=policy_arn):
+            for version in page.get('Versions', []):
+                versions.append({
+                    'version_id': version['VersionId'],
+                    'is_default': version['IsDefaultVersion'],
+                    'create_date': version['CreateDate'].isoformat()
+                })
+        return versions
+    except Exception:
+        return []
