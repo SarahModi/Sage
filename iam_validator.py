@@ -11,7 +11,7 @@ class IAMValidator:
 
     def __init__(self, aws_profile: str):
         self.aws_client = AWSClient(aws_profile)
-        self.validator = ValidationEngine()
+        self.validator = ValidationEngine(aws_client=self.aws_client)  # ← Pass aws_client
 
     def run_full_scan(self):
         """Execute complete scan."""
